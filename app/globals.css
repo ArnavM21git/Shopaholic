@@ -33,6 +33,124 @@ body {
   color: var(--text);
 }
 
+/* Base typography */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 16px;
+}
+
+h1,h2,h3,h4,h5,h6 {
+  color: var(--text);
+  margin: 0 0 0.5rem 0;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+h1 { font-size: 2.5rem; }
+h2 { font-size: 1.75rem; }
+h3 { font-size: 1.25rem; }
+h4 { font-size: 1rem; }
+h5 { font-size: 0.95rem; }
+h6 { font-size: 0.85rem; }
+
+p {
+  margin: 0 0 1rem 0;
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+/* Links */
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: opacity 120ms ease, text-decoration 120ms ease;
+}
+
+a:hover,
+a:focus {
+  text-decoration: underline;
+  opacity: 0.95;
+}
+
+/* Form controls */
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--topbar-border);
+  padding: 8px 10px;
+  border-radius: 8px;
+  outline: none;
+  transition: box-shadow 140ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+textarea { min-height: 96px; resize: vertical; }
+
+input:focus,
+textarea:focus,
+select:focus {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--topbar-border));
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+}
+
+.btn:active { transform: translateY(1px); }
+
+.btn-primary {
+  background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 85%, black));
+  color: white;
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--accent) 20%, rgba(2,6,23,0.35));
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--topbar-border);
+}
+
+/* Card variants */
+.card {
+  border: 1px solid var(--topbar-border);
+  padding: 18px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 90%, transparent), var(--surface));
+  box-shadow: 0 8px 40px rgba(2,6,23,0.12);
+  backdrop-filter: blur(6px);
+}
+
+.card--flat {
+  box-shadow: none;
+  background: var(--surface);
+}
+
+/* Utilities */
+.muted { color: var(--muted); }
+.lead { font-size: 1.125rem; color: var(--muted); }
+
+/* Small responsive tweak for headings */
+@media (max-width: 640px) {
+  h1 { font-size: 2rem; }
+}
+
 /* Top bar / header */
 :root {
   --topbar-height: 56px;

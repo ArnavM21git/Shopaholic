@@ -1,4 +1,5 @@
 import { ThemeToggle } from './ThemeProvider';
+import ShoppingList from './ShoppingList';
 
 export default function Page() {
   return (
@@ -28,6 +29,8 @@ export default function Page() {
               <h3>Get Started</h3>
               <p>Create your shopping list by adding items below. You can also save your favorite items for quick access later.</p>
             </div>
+
+            <ShoppingList />
           </div>
         </section>
       </div>
