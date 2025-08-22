@@ -76,7 +76,7 @@ export default function ShoppingList() {
 
             <div>
               <button
-                className="btn btn-secondary"
+                className="btn btn-danger"
                 onClick={() => removeItem(it.id)}
                 aria-label={`Remove ${it.text}`}
                 title="Remove"
