@@ -10,11 +10,21 @@ export function useTheme() {
 
 export default function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
-    // prefer the server-rendered attribute if present during first render
+    // Prefer (in order): cookie, server-rendered attribute, OS preference, fallback to light
     try {
-      if (typeof document !== 'undefined') {
+      if (typeof document !== 'undefined' && typeof window !== 'undefined') {
+        // cookie
+        const match = document.cookie.match(/(?:^|; )theme=(light|dark)(?:;|$)/);
+        if (match) return match[1];
+
+        // server-rendered attribute
         const server = document.documentElement.getAttribute('data-theme');
         if (server === 'light' || server === 'dark') return server;
+
+        // OS preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          return 'dark';
+        }
       }
     } catch (e) {
       // ignore
@@ -38,6 +48,10 @@ export default function ThemeProvider({ children }) {
   return (
     <ThemeContext.Provider value={{ theme, setTheme, toggle }}>
       {children}
+      {/* Accessible status for screen readers announcing theme changes */}
+      <div aria-live="polite" role="status" className="sr-only">
+        {theme === 'dark' ? 'Dark mode enabled' : 'Light mode enabled'}
+      </div>
     </ThemeContext.Provider>
   );
 }
@@ -45,11 +59,21 @@ export default function ThemeProvider({ children }) {
 export function ThemeToggle({ className }) {
   const { theme, toggle } = useTheme();
   const isCompact = !!(className && className.includes('compact'));
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (isCompact) {
     return (
       <button onClick={toggle} aria-label="Toggle theme" className={className} title="Toggle theme">
-        {theme === 'light' ? (
+        {/* Render a neutral placeholder on the server and before mount to avoid hydration mismatch */}
+        {!mounted ? (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+            <circle cx="12" cy="12" r="6" fill="currentColor" opacity="0.15" />
+          </svg>
+        ) : theme === 'light' ? (
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
             <path d="M12 3v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M12 19v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
