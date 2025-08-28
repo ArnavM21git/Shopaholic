@@ -26,7 +26,7 @@ npm start
 Notes
 - The project uses the app/ directory with client components.
 - Do not commit secrets — use `.env.local` locally and `.env.example` in the repo.
-# copilot-next
+
 
 Minimal Next.js app using the App Router (no src folder).
 
@@ -36,3 +36,4 @@ Commands:
 - npm run dev
 
 Open http://localhost:3000 after running the dev server.
+
