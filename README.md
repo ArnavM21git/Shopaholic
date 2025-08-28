@@ -1,4 +1,4 @@
-# Copilot Next
+# Shopaholic
 
 Simple Next.js demo project with a shopping list UI.
 
