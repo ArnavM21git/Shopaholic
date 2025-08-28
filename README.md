@@ -1,5 +1,7 @@
 # Shopaholic
 
+
+
 Simple Next.js demo project with a shopping list UI.
 
 Getting started
@@ -36,4 +38,16 @@ Commands:
 - npm run dev
 
 Open http://localhost:3000 after running the dev server.
+
+
+---
+
+#### “This was my first experiment with Next.js using Copilot.”
+
+#### “Goal: learn how modern web frameworks work.”
+
+#### “I don’t fully know Next.js yet, but I deployed and ran a working site.”
+
+---
+
 
