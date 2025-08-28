@@ -149,6 +149,95 @@ select:focus {
   border: 0 !important;
 }
 
+/* Shopping list styles: use numbered list and white item backgrounds in both themes */
+
+.shopping-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  counter-reset: shopping-item;
+}
+
+.shopping-list li {
+  background: #ffffff; /* explicit white in both light and dark themes as requested */
+  color: #000000; /* readable black text */
+  padding: 12px 14px 12px 80px; /* left padding increased to make room for badge */
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgba(2,6,23,0.06);
+  box-shadow: 0 6px 20px rgba(2,6,23,0.96);
+  position: relative;
+}
+
+/* explicit number before each item using CSS counter for reliability */
+.shopping-list li::before {
+  counter-increment: shopping-item;
+  content: counter(shopping-item);
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(2,6,23,0.26); /* stronger badge tint (≈ +8% darkness) */
+  color: #000000;
+  font-weight: 700;
+  font-size: 0.95rem;
+  box-shadow: 0 2px 6px rgba(2,6,23,0.96);
+}
+
+/* subtle content container inside the white item to separate number badge and controls */
+.shopping-list li .item-content {
+  background: rgba(15,23,42,0.11); /* darker content tint (≈ +8% darkness) */
+  padding: 12px 14px;
+  border-radius: 6px;
+  flex: 1 1 auto;
+  margin-right: 16px;
+}
+
+.shopping-list li .item-text { margin: 0; }
+
+.shopping-list li .item-text { color: #000000 !important; font-weight: 700; }
+
+.shopping-list li .item-text { font-weight: 600; color: inherit; }
+
+@media (prefers-color-scheme: dark) {
+  /* keep list items white but ensure text remains readable */
+  .shopping-list li { color: var(--text); }
+}
+
+/* Make list items less contrasty on explicit dark theme */
+:root[data-theme='dark'] .shopping-list li {
+  /* increase lightness slightly so items read clearer on dark backgrounds */
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 6px 18px rgba(2,6,23,0.06);
+  color: var(--text);
+}
+
+:root[data-theme='dark'] .shopping-list li::before {
+  background: rgba(255,255,255,0.18); /* slightly brighter badge for clearer separation */
+  color: var(--surface);
+  box-shadow: 0 1px 4px rgba(2,6,23,0.06);
+}
+
+:root[data-theme='dark'] .shopping-list li .item-content {
+  background: rgba(255,255,255,0.11); /* more visible content tint */
+}
+
+:root[data-theme='dark'] .shopping-list li .item-text {
+  color: var(--text) !important;
+}
+
 .btn-secondary {
   background: var(--surface);
   color: var(--text);
@@ -161,7 +250,7 @@ select:focus {
   padding: 18px;
   border-radius: 12px;
   background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 90%, transparent), var(--surface));
-  box-shadow: 0 8px 40px rgba(2,6,23,0.12);
+  box-shadow: 0 8px 40px rgba(2,6,23,0.2);
   backdrop-filter: blur(6px);
 }
 
