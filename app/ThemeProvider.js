@@ -9,31 +9,41 @@ export function useTheme() {
 }
 
 export default function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => {
-    // Prefer (in order): cookie, server-rendered attribute, OS preference, fallback to light
+  // Start with a "no value" so server and client don't disagree.
+  const [theme, setTheme] = useState(null);
+  const [mounted, setMounted] = useState(false);
+
+  // On mount, read the server-provided html attribute, cookie, or OS preference.
+  useEffect(() => {
+    setMounted(true);
     try {
-      if (typeof document !== 'undefined' && typeof window !== 'undefined') {
-        // cookie
+      if (typeof document !== 'undefined') {
+        // cookie takes precedence
         const match = document.cookie.match(/(?:^|; )theme=(light|dark)(?:;|$)/);
-        if (match) return match[1];
-
-        // server-rendered attribute
-        const server = document.documentElement.getAttribute('data-theme');
-        if (server === 'light' || server === 'dark') return server;
-
-        // OS preference
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          return 'dark';
+        if (match) {
+          setTheme(match[1]);
+          return;
         }
+
+        // server-rendered attribute set in RootLayout
+        const server = document.documentElement.getAttribute('data-theme');
+        if (server === 'light' || server === 'dark') {
+          setTheme(server);
+          return;
+        }
+
+  // Do not auto-apply OS-level dark preference here to avoid overriding
+  // the server-provided theme or cookie. Default will be 'light' below.
       }
     } catch (e) {
       // ignore
     }
-    return 'light';
-  });
+    setTheme('light');
+  }, []);
 
-  // sync theme change to the DOM and set a cookie for SSR
+  // sync theme change to the DOM and set a cookie for SSR — only after mount and when theme is set
   useEffect(() => {
+    if (!mounted || (theme !== 'light' && theme !== 'dark')) return;
     try {
       document.documentElement.setAttribute('data-theme', theme);
       // set cookie for 1 year
@@ -41,17 +51,19 @@ export default function ThemeProvider({ children }) {
     } catch (e) {
       // ignore
     }
-  }, [theme]);
+  }, [theme, mounted]);
 
   const toggle = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'));
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, toggle }}>
       {children}
-      {/* Accessible status for screen readers announcing theme changes */}
-      <div aria-live="polite" role="status" className="sr-only">
-        {theme === 'dark' ? 'Dark mode enabled' : 'Light mode enabled'}
-      </div>
+      {/* Accessible status for screen readers announcing theme changes -- only render after mount to avoid hydration mismatch */}
+      {mounted && (theme === 'dark' || theme === 'light') && (
+        <div aria-live="polite" role="status" className="sr-only">
+          {theme === 'dark' ? 'Dark mode enabled' : 'Light mode enabled'}
+        </div>
+      )}
     </ThemeContext.Provider>
   );
 }
