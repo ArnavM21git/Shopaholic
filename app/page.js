@@ -1,5 +1,5 @@
-import { ThemeToggle } from './ThemeProvider';
-import ShoppingList from './ShoppingList';
+import { ThemeToggle } from '../context/ThemeProvider';
+import ShoppingList from '../components/ShoppingList';
 
 export default function Page() {
   return (

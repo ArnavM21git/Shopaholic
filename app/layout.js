@@ -1,5 +1,5 @@
 import './globals.css';
-import ThemeProvider from './ThemeProvider';
+import ThemeProvider from '../context/ThemeProvider';
 import { cookies } from 'next/headers';
 
 export default async function RootLayout({ children }) {
