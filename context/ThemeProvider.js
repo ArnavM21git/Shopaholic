@@ -14,37 +14,84 @@ export default function ThemeProvider({ children }) {
 
   useEffect(() => {
     setMounted(true);
+    
+    // Initialize theme from multiple sources with priority order
+    let initialTheme = null;
+    
     try {
       if (typeof document !== 'undefined') {
+        // 1. Check for existing cookie first (highest priority)
         const match = document.cookie.match(/(?:^|; )theme=(light|dark)(?:;|$)/);
-        if (match) {
-          setTheme(match[1]);
-          return;
+        if (match && (match[1] === 'light' || match[1] === 'dark')) {
+          initialTheme = match[1];
         }
 
-        const server = document.documentElement.getAttribute('data-theme');
-        if (server === 'light' || server === 'dark') {
-          setTheme(server);
-          return;
+        // 2. If no cookie, check localStorage
+        if (!initialTheme) {
+          const storedTheme = localStorage.getItem('theme');
+          if (storedTheme === 'light' || storedTheme === 'dark') {
+            initialTheme = storedTheme;
+          }
         }
+
+        // 3. If no stored preference, check server-rendered attribute
+        if (!initialTheme) {
+          const serverTheme = document.documentElement.getAttribute('data-theme');
+          if (serverTheme === 'light' || serverTheme === 'dark') {
+            initialTheme = serverTheme;
+          }
+        }
+
+        // 4. Final fallback to light theme
+        if (!initialTheme) {
+          initialTheme = 'light';
+        }
+
+        // Set the theme and ensure DOM is immediately updated
+        setTheme(initialTheme);
+        document.documentElement.setAttribute('data-theme', initialTheme);
+        
+        // Ensure persistence across all storage methods
+        if (initialTheme) {
+          document.cookie = `theme=${initialTheme}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+          localStorage.setItem('theme', initialTheme);
+        }
+        
+        return;
       }
     } catch (e) {
-      // ignore
+      // Ignore errors silently
     }
+    
+    // Browser fallback
     setTheme('light');
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
   }, []);
 
   useEffect(() => {
-    if (!mounted || (theme !== 'light' && theme !== 'dark')) return;
+    if (!mounted || !theme || (theme !== 'light' && theme !== 'dark')) return;
+    
     try {
+      // Update DOM
       document.documentElement.setAttribute('data-theme', theme);
+      
+      // Update cookie for server-side persistence
       document.cookie = `theme=${theme}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+      
+      // Also store in localStorage as backup
+      localStorage.setItem('theme', theme);
+      
     } catch (e) {
-      // ignore
+      // Ignore errors silently
     }
   }, [theme, mounted]);
 
-  const toggle = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'));
+  const toggle = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+  };
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, toggle }}>
