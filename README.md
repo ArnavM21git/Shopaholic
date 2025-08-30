@@ -1,10 +1,34 @@
 # Shopaholic
 
+A simple shopping list application built with Next.js and Supabase.
 
+## Features
 
-Simple Next.js demo project with a shopping list UI.
+- Create and manage shopping lists
+- Save lists to database
+- View all saved shopping lists
+- Clear list with confirmation
+- Modern, responsive design
 
-Getting started
+## Tech Stack
+
+- Next.js
+- React
+- Supabase
+- ESLint
+
+## Project Structure
+
+```
+shopaholic/
+├── app/          # Main application code
+├── components/   # Reusable components
+├── context/     # Theme provider
+├── hooks/       # Custom hooks
+└── utils/       # Utility functions
+```
+
+## Getting started
 
 1. Install dependencies
 
