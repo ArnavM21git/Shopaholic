@@ -28,7 +28,9 @@
   - Contact forms  
   - Blog pagination  
   - Other standard components  
--complete checks from _features.md file after completing its task
+
+- When implementing features in the `features.md` file, check off the features as they are completed.
+
 
 ## Code Style
 - Add **comments only for parts that may confuse a beginner** (like routing, APIs, styled-components).  
