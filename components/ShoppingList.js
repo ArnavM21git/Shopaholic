@@ -2,15 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import useSaveShoppingList from '../hooks/useSaveShoppingList';
-import { supabaseClient } from '../app/lib/supabaseClient';
 
 export default function ShoppingList() {
   const STORAGE_KEY = 'shopaholic.items';
   const [items, setItems] = useState([]);
   const [text, setText] = useState('');
   const { saveList, isSaving, error, successMessage } = useSaveShoppingList();
-  const [email, setEmail] = useState('');
-  const [user, setUser] = useState(null);
   const [infoMsg, setInfoMsg] = useState('');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
@@ -21,28 +18,6 @@ export default function ShoppingList() {
     } catch (e) {
       // ignore
     }
-  }, []);
-
-  useEffect(() => {
-    // get current user on mount
-    let mounted = true;
-    (async () => {
-      try {
-        const { data } = await supabaseClient.auth.getUser();
-        if (mounted) setUser(data?.user ?? null);
-      } catch (e) {
-        // ignore
-      }
-    })();
-
-    const { subscription } = supabaseClient.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      mounted = false;
-      try { subscription?.unsubscribe(); } catch (e) {}
-    };
   }, []);
 
   useEffect(() => {
@@ -196,88 +171,65 @@ export default function ShoppingList() {
           ))}
         </ol>
       </div>
-        <div style={{ marginTop: 12, marginBottom: 12 }}>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <input
-                placeholder="you@example.com (to sign in)"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={{ flex: 1 }}
-              />
-              <button
-                className="btn"
-                onClick={async () => {
-                  if (!email) return setInfoMsg('Enter an email to receive a magic link');
-                  setInfoMsg('Sending magic link...');
-                  const { error: e } = await supabaseClient.auth.signInWithOtp({ email });
-                  if (e) setInfoMsg('Error sending magic link: ' + e.message);
-                  else setInfoMsg('Magic link sent — check your email and follow the link, then return here to save.');
-                }}
-              >
-                Send Sign-In Link
-              </button>
-            </div>
 
-            <div style={{ marginTop: 8 }}>
-              <button
-                className={`btn btn-primary ${isSaving ? 'opacity-75' : ''}`}
-                onClick={async () => {
-                  try {
-                    const result = await saveList(items.map(it => it.text));
-                    if (result) {
-                      // Clear info message after 5 seconds
-                      setInfoMsg('Shopping list saved successfully! ✓');
-                      setTimeout(() => {
-                        setInfoMsg('');
-                      }, 5000);
-                    }
-                  } catch (err) {
-                    setInfoMsg('Error saving list: ' + err.message);
-                    // Clear error message after 5 seconds
-                    setTimeout(() => {
-                      setInfoMsg('');
-                    }, 5000);
-                  }
-                }}
-                disabled={isSaving || items.length === 0}
-                style={{
-                  position: 'relative',
-                  minWidth: '150px',
-                  backgroundColor: '#4CAF50',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                {isSaving ? (
-                  <>
-                    <span className="opacity-0">Save to Supabase</span>
-                    <span className="absolute inset-0 flex items-center justify-center">
-                      Saving...
-                    </span>
-                  </>
-                ) : (
-                  'Save to Supabase'
-                )}
-              </button>
-            </div>
-          {infoMsg && (
-            <div
-              style={{
-                marginTop: 8,
-                padding: '8px 12px',
-                borderRadius: '4px',
-                backgroundColor: infoMsg.includes('successfully') ? '#4CAF50' : infoMsg.includes('Error') ? '#f44336' : '#2196F3',
-                color: 'white',
-                opacity: 1,
-                transition: 'opacity 0.3s ease-in-out',
-                animation: 'slideIn 0.3s ease-out'
-              }}
-            >
-              {infoMsg}
-            </div>
+      <div style={{ marginTop: 12, marginBottom: 12 }}>
+        <button
+          className={`btn btn-primary ${isSaving ? 'opacity-75' : ''}`}
+          onClick={async () => {
+            try {
+              const result = await saveList(items.map(it => it.text));
+              if (result) {
+                setInfoMsg('Shopping list saved successfully! ✓');
+                setTimeout(() => {
+                  setInfoMsg('');
+                }, 5000);
+              }
+            } catch (err) {
+              setInfoMsg('Error saving list: ' + err.message);
+              setTimeout(() => {
+                setInfoMsg('');
+              }, 5000);
+            }
+          }}
+          disabled={isSaving || items.length === 0}
+          style={{
+            position: 'relative',
+            minWidth: '150px',
+            backgroundColor: '#4CAF50',
+            color: 'white',
+            fontWeight: 'bold',
+            transition: 'all 0.3s ease'
+          }}
+        >
+          {isSaving ? (
+            <>
+              <span className="opacity-0">SAVE</span>
+              <span className="absolute inset-0 flex items-center justify-center">
+                Saving...
+              </span>
+            </>
+          ) : (
+            'SAVE'
           )}
-        </div>
+        </button>
+        
+        {infoMsg && (
+          <div
+            style={{
+              marginTop: 8,
+              padding: '8px 12px',
+              borderRadius: '4px',
+              backgroundColor: infoMsg.includes('successfully') ? '#4CAF50' : infoMsg.includes('Error') ? '#f44336' : '#2196F3',
+              color: 'white',
+              opacity: 1,
+              transition: 'opacity 0.3s ease-in-out',
+              animation: 'slideIn 0.3s ease-out'
+            }}
+          >
+            {infoMsg}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
