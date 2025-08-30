@@ -28,6 +28,7 @@
   - Contact forms  
   - Blog pagination  
   - Other standard components  
+-complete checks from _features.md file after completing its task
 
 ## Code Style
 - Add **comments only for parts that may confuse a beginner** (like routing, APIs, styled-components).  
