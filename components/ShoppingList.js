@@ -1,11 +1,18 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import useSaveShoppingList from '../hooks/useSaveShoppingList';
+import { supabaseClient } from '../app/lib/supabaseClient';
 
 export default function ShoppingList() {
   const STORAGE_KEY = 'shopaholic.items';
   const [items, setItems] = useState([]);
   const [text, setText] = useState('');
+  const { saveList, isSaving, error, successMessage } = useSaveShoppingList();
+  const [email, setEmail] = useState('');
+  const [user, setUser] = useState(null);
+  const [infoMsg, setInfoMsg] = useState('');
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   useEffect(() => {
     try {
@@ -14,6 +21,28 @@ export default function ShoppingList() {
     } catch (e) {
       // ignore
     }
+  }, []);
+
+  useEffect(() => {
+    // get current user on mount
+    let mounted = true;
+    (async () => {
+      try {
+        const { data } = await supabaseClient.auth.getUser();
+        if (mounted) setUser(data?.user ?? null);
+      } catch (e) {
+        // ignore
+      }
+    })();
+
+    const { subscription } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      mounted = false;
+      try { subscription?.unsubscribe(); } catch (e) {}
+    };
   }, []);
 
   useEffect(() => {
@@ -40,6 +69,13 @@ export default function ShoppingList() {
     setItems(items.filter((it) => it.id !== id));
   }
 
+  function clearList() {
+    setItems([]);
+    setShowClearConfirm(false);
+    setInfoMsg('Shopping list cleared');
+    setTimeout(() => setInfoMsg(''), 5000);
+  }
+
   return (
     <div className="card">
       <h3>Your Shopping List</h3>
@@ -57,7 +93,75 @@ export default function ShoppingList() {
         <button className="btn btn-primary" onClick={addItem} aria-label="Add">
           Add
         </button>
+        {items.length > 0 && (
+          <button 
+            className="btn btn-danger"
+            onClick={() => setShowClearConfirm(true)}
+            aria-label="Clear list"
+            style={{
+              backgroundColor: '#dc3545',
+              color: 'white',
+              fontWeight: 'bold',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            Clear All
+          </button>
+        )}
       </div>
+
+      {/* Clear Confirmation Dialog */}
+      {showClearConfirm && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'white',
+              padding: '20px',
+              borderRadius: '8px',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+              maxWidth: '400px',
+              width: '90%',
+            }}
+          >
+            <h4 style={{ marginTop: 0 }}>Clear Shopping List?</h4>
+            <p style={{ color: '#666' }}>Are you sure you want to clear all items from your shopping list? This action cannot be undone.</p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowClearConfirm(false)}
+                style={{ padding: '8px 16px' }}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={clearList}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#dc3545',
+                  color: 'white',
+                  fontWeight: 'bold'
+                }}
+              >
+                Clear List
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div>
         {items.length === 0 && <p className="muted">No items yet  add one above.</p>}
@@ -92,6 +196,88 @@ export default function ShoppingList() {
           ))}
         </ol>
       </div>
+        <div style={{ marginTop: 12, marginBottom: 12 }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input
+                placeholder="you@example.com (to sign in)"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={{ flex: 1 }}
+              />
+              <button
+                className="btn"
+                onClick={async () => {
+                  if (!email) return setInfoMsg('Enter an email to receive a magic link');
+                  setInfoMsg('Sending magic link...');
+                  const { error: e } = await supabaseClient.auth.signInWithOtp({ email });
+                  if (e) setInfoMsg('Error sending magic link: ' + e.message);
+                  else setInfoMsg('Magic link sent — check your email and follow the link, then return here to save.');
+                }}
+              >
+                Send Sign-In Link
+              </button>
+            </div>
+
+            <div style={{ marginTop: 8 }}>
+              <button
+                className={`btn btn-primary ${isSaving ? 'opacity-75' : ''}`}
+                onClick={async () => {
+                  try {
+                    const result = await saveList(items.map(it => it.text));
+                    if (result) {
+                      // Clear info message after 5 seconds
+                      setInfoMsg('Shopping list saved successfully! ✓');
+                      setTimeout(() => {
+                        setInfoMsg('');
+                      }, 5000);
+                    }
+                  } catch (err) {
+                    setInfoMsg('Error saving list: ' + err.message);
+                    // Clear error message after 5 seconds
+                    setTimeout(() => {
+                      setInfoMsg('');
+                    }, 5000);
+                  }
+                }}
+                disabled={isSaving || items.length === 0}
+                style={{
+                  position: 'relative',
+                  minWidth: '150px',
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                {isSaving ? (
+                  <>
+                    <span className="opacity-0">Save to Supabase</span>
+                    <span className="absolute inset-0 flex items-center justify-center">
+                      Saving...
+                    </span>
+                  </>
+                ) : (
+                  'Save to Supabase'
+                )}
+              </button>
+            </div>
+          {infoMsg && (
+            <div
+              style={{
+                marginTop: 8,
+                padding: '8px 12px',
+                borderRadius: '4px',
+                backgroundColor: infoMsg.includes('successfully') ? '#4CAF50' : infoMsg.includes('Error') ? '#f44336' : '#2196F3',
+                color: 'white',
+                opacity: 1,
+                transition: 'opacity 0.3s ease-in-out',
+                animation: 'slideIn 0.3s ease-out'
+              }}
+            >
+              {infoMsg}
+            </div>
+          )}
+        </div>
     </div>
   );
 }

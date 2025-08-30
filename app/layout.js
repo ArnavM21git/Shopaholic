@@ -1,5 +1,6 @@
 import './globals.css';
 import ThemeProvider from '../context/ThemeProvider';
+import Header from './components/Header';
 import { cookies } from 'next/headers';
 
 export default async function RootLayout({ children }) {
@@ -14,7 +15,14 @@ export default async function RootLayout({ children }) {
         <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet" />
       </head>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <div className="app-container">
+            <Header />
+            <main className="main-content">
+              {children}
+            </main>
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   )
