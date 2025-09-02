@@ -2,7 +2,10 @@ import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
 
 // Ensure middleware runs on the Edge runtime
-export const runtime = 'edge'
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { NextResponse } from 'next/server'
+
+export const runtime = 'experimental-edge'
 
 export async function middleware(req) {
   const res = NextResponse.next()
