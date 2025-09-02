@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabaseClient } from '../lib/supabaseClient';
+import { getSupabaseClient } from '../lib/supabaseClient';
 
 export default function Lists() {
   const [lists, setLists] = useState([]);
@@ -12,7 +12,11 @@ export default function Lists() {
 
   const fetchLists = async () => {
     try {
-      const { data, error } = await supabaseClient
+      const client = getSupabaseClient();
+      if (!client) {
+        throw new Error('Supabase not configured');
+      }
+      const { data, error } = await client
         .from('shopping_lists')
         .select('*')
         .order('created_at', { ascending: false });
@@ -29,7 +33,11 @@ export default function Lists() {
   const handleDelete = async (listId) => {
     setIsDeleting(true);
     try {
-      const { error } = await supabaseClient
+      const client = getSupabaseClient();
+      if (!client) {
+        throw new Error('Supabase not configured');
+      }
+      const { error } = await client
         .from('shopping_lists')
         .delete()
         .eq('id', listId);
