@@ -2,25 +2,27 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-const ThemeContext = createContext();
+const ThemeContext = createContext({
+  theme: 'light',
+  setTheme: () => {},
+  toggle: () => {},
+  mounted: false
+});
 
 export function useTheme() {
   const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
   return context;
 }
 
 export default function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState('light'); // Default to light
+  const [theme, setTheme] = useState('light');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     
     // Initialize theme from multiple sources with priority order
-    let initialTheme = 'light'; // Safe default
+    let initialTheme = 'light';
     
     try {
       // Only run in browser environment
@@ -57,13 +59,6 @@ export default function ThemeProvider({ children }) {
       }
     } catch (e) {
       console.warn('Theme initialization error:', e);
-      // Fallback to light theme
-      if (theme !== 'light') {
-        setTheme('light');
-        if (typeof document !== 'undefined') {
-          updateThemeInDOM('light');
-        }
-      }
     }
   }, []);
 
@@ -104,18 +99,15 @@ export default function ThemeProvider({ children }) {
     }
   };
 
-  // Prevent rendering until mounted to avoid hydration mismatches
-  if (!mounted) {
-    return <div style={{ visibility: 'hidden' }}>{children}</div>;
-  }
+  const contextValue = {
+    theme,
+    setTheme: setThemeWithValidation,
+    toggle,
+    mounted
+  };
 
   return (
-    <ThemeContext.Provider value={{ 
-      theme, 
-      setTheme: setThemeWithValidation, 
-      toggle,
-      mounted 
-    }}>
+    <ThemeContext.Provider value={contextValue}>
       {children}
     </ThemeContext.Provider>
   );
