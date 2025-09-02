@@ -11,9 +11,6 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="en" data-theme={theme}>
-      <head>
-        <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet" />
-      </head>
       <body>
         <ThemeProvider>
           <div className="app-container">

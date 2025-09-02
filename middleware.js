@@ -1,40 +1,75 @@
-'use server'
-
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 
-// Force experimental edge runtime
-/** @type {'experimental-edge'} */
-export const runtime = 'experimental-edge'
-
 export async function middleware(request) {
-  const res = NextResponse.next()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        get: (name) => request.cookies.get(name)?.value,
-        set: (name, value, options) => {
-          res.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-        },
-        remove: (name, options) => {
-          res.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-        },
-      },
-    }
-  )
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
 
-  await supabase.auth.getSession()
-  return res
+  try {
+    // Check if Supabase environment variables are set
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.warn('Supabase environment variables not found, skipping auth middleware')
+      return response
+    }
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          get(name) {
+            return request.cookies.get(name)?.value
+          },
+          set(name, value, options) {
+            request.cookies.set({
+              name,
+              value,
+              ...options,
+            })
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            })
+            response.cookies.set({
+              name,
+              value,
+              ...options,
+            })
+          },
+          remove(name, options) {
+            request.cookies.set({
+              name,
+              value: '',
+              ...options,
+            })
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            })
+            response.cookies.set({
+              name,
+              value: '',
+              ...options,
+            })
+          },
+        },
+      }
+    )
+
+    // This will refresh session if expired - required for Server Components
+    await supabase.auth.getSession()
+
+  } catch (error) {
+    // Log error but don't throw to prevent middleware from failing
+    console.error('Middleware error:', error)
+  }
+
+  return response
 }
 
 export const config = {
