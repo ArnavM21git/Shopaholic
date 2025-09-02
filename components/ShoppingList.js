@@ -7,9 +7,19 @@ export default function ShoppingList() {
   const STORAGE_KEY = 'shopaholic.items';
   const [items, setItems] = useState([]);
   const [text, setText] = useState('');
+  const [listTitle, setListTitle] = useState('');
+  const [category, setCategory] = useState('grocery'); // Default to grocery
   const { saveList, isSaving, error, successMessage } = useSaveShoppingList();
   const [infoMsg, setInfoMsg] = useState('');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  const categories = [
+    { id: 'grocery', name: 'Grocery' },
+    { id: 'clothing', name: 'Clothing' },
+    { id: 'electronics', name: 'Electronics' },
+    { id: 'household', name: 'Household' },
+    { id: 'other', name: 'Other' }
+  ];
 
   useEffect(() => {
     try {
@@ -53,8 +63,40 @@ export default function ShoppingList() {
 
   return (
     <div className="card">
-      <h3>Your Shopping List</h3>
-      <p className="muted">Add items and remove them with the trash button.</p>
+      <h3>Create Shopping List</h3>
+      <p className="muted">Add list details and items below.</p>
+
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
+            List Title
+          </label>
+          <input
+            type="text"
+            value={listTitle}
+            onChange={(e) => setListTitle(e.target.value)}
+            placeholder="e.g. Weekly Groceries, Summer Clothes"
+            style={{ width: '100%' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
+            Category
+          </label>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            style={{ width: '100%', padding: '8px' }}
+          >
+            {categories.map(cat => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       <div style={{ display: 'flex', gap: 10, marginTop: 12, marginBottom: 12 }}>
         <input
@@ -176,10 +218,21 @@ export default function ShoppingList() {
         <button
           className={`btn btn-primary ${isSaving ? 'opacity-75' : ''}`}
           onClick={async () => {
+            if (!listTitle.trim()) {
+              setInfoMsg('Please enter a list title');
+              setTimeout(() => setInfoMsg(''), 5000);
+              return;
+            }
             try {
-              const result = await saveList(items.map(it => it.text));
+              const result = await saveList(
+                items.map(it => it.text),
+                listTitle.trim(),
+                category
+              );
               if (result) {
                 setInfoMsg('Shopping list saved successfully! ✓');
+                setListTitle('');
+                setItems([]);
                 setTimeout(() => {
                   setInfoMsg('');
                 }, 5000);

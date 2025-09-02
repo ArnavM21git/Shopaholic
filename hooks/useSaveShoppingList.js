@@ -1,19 +1,17 @@
 import { useState } from 'react';
-import { createClient } from '../utils/supabase';
+import { supabase } from '../utils/supabase';
 
 export default function useSaveShoppingList() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const saveList = async (items) => {
+  const saveList = async (items, title, category) => {
     setIsSaving(true);
     setError(null);
     setSuccessMessage('');
 
     try {
-      const supabase = createClient();
-      
       // Format the items array according to the table structure
       const formattedItems = items.map(item => item.text || item);
       
@@ -22,7 +20,8 @@ export default function useSaveShoppingList() {
         .insert([
           {
             items: formattedItems,
-            title: `Shopping List ${new Date().toLocaleDateString()}`,
+            title: title || `Shopping List ${new Date().toLocaleDateString()}`,
+            category: category || 'other',
             metadata: { 
               created_from: 'web_app',
               created_at: new Date().toISOString()

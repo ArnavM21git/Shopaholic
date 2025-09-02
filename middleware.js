@@ -1,4 +1,4 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'experimental-edge'
@@ -13,7 +13,29 @@ export async function middleware(req) {
       return res
     }
 
-    const supabase = createMiddlewareClient({ req, res })
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          get: (name) => req.cookies.get(name)?.value,
+          set: (name, value, options) => {
+            res.cookies.set({
+              name,
+              value,
+              ...options,
+            })
+          },
+          remove: (name, options) => {
+            res.cookies.set({
+              name,
+              value: '',
+              ...options,
+            })
+          },
+        },
+      }
+    )
     // Try to read session; if this throws it will be caught below
     await supabase.auth.getSession()
   } catch (err) {

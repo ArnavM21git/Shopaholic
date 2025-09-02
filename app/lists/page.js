@@ -85,7 +85,22 @@ export default function Lists() {
           {lists.map((list) => (
             <div key={list.id} className="list-card">
               <div className="list-header">
-                <h3>{list.title}</h3>
+                <div>
+                  <h3>{list.title}</h3>
+                  <span 
+                    style={{ 
+                      display: 'inline-block',
+                      padding: '2px 8px',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      backgroundColor: 'var(--surface)',
+                      color: 'var(--muted)',
+                      marginTop: '4px'
+                    }}
+                  >
+                    {list.category ? list.category.charAt(0).toUpperCase() + list.category.slice(1) : 'Other'}
+                  </span>
+                </div>
                 <button
                   className="btn btn-danger btn-small"
                   onClick={() => setDeleteConfirm(list.id)}
