@@ -4,10 +4,14 @@ import Header from './components/Header';
 import { cookies } from 'next/headers';
 
 export default async function RootLayout({ children }) {
-  // read theme cookie on the server so the initial HTML can include data-theme
-  const cookieStore = await cookies();
-  const cookieTheme = cookieStore.get('theme')?.value;
-  const theme = cookieTheme === 'dark' ? 'dark' : 'light';
+  let theme = 'light';
+  try {
+    const cookieStore = await cookies();
+    const cookieTheme = cookieStore.get('theme')?.value;
+    theme = cookieTheme === 'dark' ? 'dark' : 'light';
+  } catch (error) {
+    console.error('Error reading theme cookie:', error);
+  }
 
   return (
     <html lang="en" data-theme={theme}>
