@@ -3,8 +3,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 
-// Force experimental edge runtime
-/** @type {'experimental-edge'} */
 export const runtime = 'experimental-edge'
 
 export async function middleware(request) {
