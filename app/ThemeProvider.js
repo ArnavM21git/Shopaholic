@@ -9,7 +9,7 @@ export function useTheme() {
 }
 
 export default function ThemeProvider({ children }) {
-  // Start with a "no value" so server and client don't disagree.
+  // Start with a "no value" so server and client do not disagree.
   const [theme, setTheme] = useState(null);
   const [mounted, setMounted] = useState(false);
 

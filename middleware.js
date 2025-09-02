@@ -65,7 +65,7 @@ export async function middleware(request) {
     await supabase.auth.getSession()
 
   } catch (error) {
-    // Log error but don't throw to prevent middleware from failing
+    // Log error but do not throw to prevent middleware from failing
     console.error('Middleware error:', error)
   }
 
