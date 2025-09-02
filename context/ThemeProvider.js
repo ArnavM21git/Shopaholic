@@ -5,87 +5,88 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 const ThemeContext = createContext();
 
 export function useTheme() {
-  return useContext(ThemeContext);
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
 }
 
 export default function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(null);
+  const [theme, setTheme] = useState('light'); // Default to light
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     
     // Initialize theme from multiple sources with priority order
-    let initialTheme = null;
+    let initialTheme = 'light'; // Safe default
     
     try {
-      if (typeof document !== 'undefined') {
+      // Only run in browser environment
+      if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         // 1. Check for existing cookie first (highest priority)
-        const match = document.cookie.match(/(?:^|; )theme=(light|dark)(?:;|$)/);
-        if (match && (match[1] === 'light' || match[1] === 'dark')) {
-          initialTheme = match[1];
-        }
-
-        // 2. If no cookie, check localStorage
-        if (!initialTheme) {
-          const storedTheme = localStorage.getItem('theme');
-          if (storedTheme === 'light' || storedTheme === 'dark') {
-            initialTheme = storedTheme;
+        const cookieMatch = document.cookie.match(/(?:^|; )theme=(light|dark)(?:;|$)/);
+        if (cookieMatch && (cookieMatch[1] === 'light' || cookieMatch[1] === 'dark')) {
+          initialTheme = cookieMatch[1];
+        } else {
+          // 2. If no cookie, check localStorage
+          try {
+            const storedTheme = localStorage.getItem('theme');
+            if (storedTheme === 'light' || storedTheme === 'dark') {
+              initialTheme = storedTheme;
+            }
+          } catch (e) {
+            // localStorage might not be available
           }
-        }
 
-        // 3. If no stored preference, check server-rendered attribute
-        if (!initialTheme) {
-          const serverTheme = document.documentElement.getAttribute('data-theme');
-          if (serverTheme === 'light' || serverTheme === 'dark') {
-            initialTheme = serverTheme;
+          // 3. If no stored preference, check server-rendered attribute
+          if (!cookieMatch) {
+            const serverTheme = document.documentElement.getAttribute('data-theme');
+            if (serverTheme === 'light' || serverTheme === 'dark') {
+              initialTheme = serverTheme;
+            }
           }
-        }
-
-        // 4. Final fallback to light theme
-        if (!initialTheme) {
-          initialTheme = 'light';
         }
 
         // Set the theme and ensure DOM is immediately updated
         setTheme(initialTheme);
-        document.documentElement.setAttribute('data-theme', initialTheme);
-        
-        // Ensure persistence across all storage methods
-        if (initialTheme) {
-          document.cookie = `theme=${initialTheme}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
-          localStorage.setItem('theme', initialTheme);
-        }
-        
-        return;
+        updateThemeInDOM(initialTheme);
       }
     } catch (e) {
-      // Ignore errors silently
-    }
-    
-    // Browser fallback
-    setTheme('light');
-    if (typeof document !== 'undefined') {
-      document.documentElement.setAttribute('data-theme', 'light');
+      console.warn('Theme initialization error:', e);
+      // Fallback to light theme
+      setTheme('light');
+      if (typeof document !== 'undefined') {
+        updateThemeInDOM('light');
+      }
     }
   }, []);
 
+  const updateThemeInDOM = (newTheme) => {
+    try {
+      if (typeof document !== 'undefined') {
+        // Update DOM
+        document.documentElement.setAttribute('data-theme', newTheme);
+        
+        // Update cookie for server-side persistence
+        document.cookie = `theme=${newTheme}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+        
+        // Also store in localStorage as backup
+        try {
+          localStorage.setItem('theme', newTheme);
+        } catch (e) {
+          // localStorage might not be available
+        }
+      }
+    } catch (e) {
+      console.warn('Theme DOM update error:', e);
+    }
+  };
+
   useEffect(() => {
     if (!mounted || !theme || (theme !== 'light' && theme !== 'dark')) return;
-    
-    try {
-      // Update DOM
-      document.documentElement.setAttribute('data-theme', theme);
-      
-      // Update cookie for server-side persistence
-      document.cookie = `theme=${theme}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
-      
-      // Also store in localStorage as backup
-      localStorage.setItem('theme', theme);
-      
-    } catch (e) {
-      // Ignore errors silently
-    }
+    updateThemeInDOM(theme);
   }, [theme, mounted]);
 
   const toggle = () => {
@@ -93,35 +94,48 @@ export default function ThemeProvider({ children }) {
     setTheme(newTheme);
   };
 
+  const setThemeWithValidation = (newTheme) => {
+    if (newTheme === 'light' || newTheme === 'dark') {
+      setTheme(newTheme);
+    }
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggle }}>
+    <ThemeContext.Provider value={{ 
+      theme, 
+      setTheme: setThemeWithValidation, 
+      toggle,
+      mounted 
+    }}>
       {children}
-      {mounted && (theme === 'dark' || theme === 'light') && (
-        <div aria-live="polite" role="status" className="sr-only">
-          {theme === 'dark' ? 'Dark mode enabled' : 'Light mode enabled'}
-        </div>
-      )}
     </ThemeContext.Provider>
   );
 }
 
 export function ThemeToggle({ className }) {
-  const { theme, toggle } = useTheme();
+  const { theme, toggle, mounted } = useTheme();
   const isCompact = !!(className && className.includes('compact'));
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return (
+      <button 
+        className={className} 
+        aria-label="Toggle theme" 
+        title="Toggle theme"
+        disabled
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+          <circle cx="12" cy="12" r="6" fill="currentColor" opacity="0.15" />
+        </svg>
+      </button>
+    );
+  }
 
   if (isCompact) {
     return (
       <button onClick={toggle} aria-label="Toggle theme" className={className} title="Toggle theme">
-        {!mounted ? (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-            <circle cx="12" cy="12" r="6" fill="currentColor" opacity="0.15" />
-          </svg>
-        ) : theme === 'light' ? (
+        {theme === 'light' ? (
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
             <path d="M12 3v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M12 19v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>

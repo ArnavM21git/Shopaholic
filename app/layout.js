@@ -1,6 +1,7 @@
 import './globals.css';
 import ThemeProvider from '../context/ThemeProvider';
 import Header from './components/Header';
+import ErrorBoundary from '../components/ErrorBoundary';
 import { cookies } from 'next/headers';
 
 export default async function RootLayout({ children }) {
@@ -12,14 +13,16 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en" data-theme={theme}>
       <body>
-        <ThemeProvider>
-          <div className="app-container">
-            <Header />
-            <main className="main-content">
-              {children}
-            </main>
-          </div>
-        </ThemeProvider>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <div className="app-container">
+              <Header />
+              <main className="main-content">
+                {children}
+              </main>
+            </div>
+          </ThemeProvider>
+        </ErrorBoundary>
       </body>
     </html>
   )
