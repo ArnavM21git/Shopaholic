@@ -33,6 +33,9 @@ class ErrorBoundary extends React.Component {
           <p style={{ color: '#7f1d1d', marginBottom: '15px' }}>
             We&apos;re sorry, but something went wrong. Please try refreshing the page.
           </p>
+          <p style={{ color: '#b91c1c', fontSize: '0.85rem', wordBreak: 'break-word' }}>
+            {this.state.error?.message || 'Unknown error'}
+          </p>
           <button 
             onClick={() => window.location.reload()} 
             style={{
@@ -46,27 +49,25 @@ class ErrorBoundary extends React.Component {
           >
             Refresh Page
           </button>
-          {process.env.NODE_ENV === 'development' && (
-            <details style={{ marginTop: '20px', textAlign: 'left' }}>
-              <summary style={{ cursor: 'pointer', fontWeight: 'bold' }}>Error Details</summary>
-              <pre style={{ 
-                backgroundColor: '#f5f5f5', 
-                padding: '10px', 
-                borderRadius: '5px',
-                overflow: 'auto',
-                fontSize: '12px'
-              }}>
-                {this.state.error?.toString()}
-                {this.state.error?.stack && (
-                  <>
-                    <br /><br />
-                    <strong>Stack Trace:</strong><br />
-                    {this.state.error.stack}
-                  </>
-                )}
-              </pre>
-            </details>
-          )}
+          <details style={{ marginTop: '20px', textAlign: 'left' }}>
+            <summary style={{ cursor: 'pointer', fontWeight: 'bold' }}>Technical Details</summary>
+            <pre style={{ 
+              backgroundColor: '#f5f5f5', 
+              padding: '10px', 
+              borderRadius: '5px',
+              overflow: 'auto',
+              fontSize: '12px'
+            }}>
+              {this.state.error?.toString()}
+              {this.state.error?.stack && (
+                <>
+                  <br /><br />
+                  <strong>Stack:</strong><br />
+                  {process.env.NODE_ENV === 'development' ? this.state.error.stack : this.state.error.stack?.split('\n').slice(0,5).join('\n')}
+                </>
+              )}
+            </pre>
+          </details>
         </div>
       );
     }

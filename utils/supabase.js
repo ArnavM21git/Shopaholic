@@ -1,28 +1,13 @@
-import { createBrowserClient } from '@supabase/ssr'
+// Deprecated file kept for backward compatibility.
+// Re-export a lazy getter so existing imports continue working without eager initialization.
+import { getSupabaseClient } from '../app/lib/supabaseClient'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-// Only log warnings in development
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('Missing Supabase environment variables')
-  }
-}
-
-export const supabase = createBrowserClient(
-  supabaseUrl || '', 
-  supabaseAnonKey || '', 
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true
-    },
-    global: {
-      headers: {
-        'x-application-name': 'shopaholic'
-      }
+export const supabase = new Proxy({}, {
+  get(_, prop) {
+    const client = getSupabaseClient();
+    if (!client) {
+      throw new Error('Supabase not configured');
     }
+    return client[prop];
   }
-)
+});

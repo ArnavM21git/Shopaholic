@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../utils/supabase';
+import { getSupabaseClient } from '../app/lib/supabaseClient';
 
 export default function useSaveShoppingList() {
   const [isSaving, setIsSaving] = useState(false);
@@ -15,7 +15,12 @@ export default function useSaveShoppingList() {
       // Format the items array according to the table structure
       const formattedItems = items.map(item => item.text || item);
       
-      const { data, error: saveError } = await supabase
+      const client = getSupabaseClient();
+      if (!client) {
+        throw new Error('Supabase not configured');
+      }
+
+      const { data, error: saveError } = await client
         .from('shopping_lists')
         .insert([
           {
