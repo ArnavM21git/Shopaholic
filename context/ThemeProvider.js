@@ -11,6 +11,9 @@ const ThemeContext = createContext({
 
 export function useTheme() {
   const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
   return context;
 }
 
@@ -99,15 +102,10 @@ export default function ThemeProvider({ children }) {
     }
   };
 
-  const contextValue = {
-    theme,
-    setTheme: setThemeWithValidation,
-    toggle,
-    mounted
-  };
+  const value = { theme, setTheme: setThemeWithValidation, toggle, mounted };
 
   return (
-    <ThemeContext.Provider value={contextValue}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );
