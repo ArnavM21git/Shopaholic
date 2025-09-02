@@ -49,16 +49,20 @@ export default function ThemeProvider({ children }) {
           }
         }
 
-        // Set the theme and ensure DOM is immediately updated
-        setTheme(initialTheme);
-        updateThemeInDOM(initialTheme);
+        // Only update if different from current theme
+        if (initialTheme !== theme) {
+          setTheme(initialTheme);
+          updateThemeInDOM(initialTheme);
+        }
       }
     } catch (e) {
       console.warn('Theme initialization error:', e);
       // Fallback to light theme
-      setTheme('light');
-      if (typeof document !== 'undefined') {
-        updateThemeInDOM('light');
+      if (theme !== 'light') {
+        setTheme('light');
+        if (typeof document !== 'undefined') {
+          updateThemeInDOM('light');
+        }
       }
     }
   }, []);
@@ -99,6 +103,11 @@ export default function ThemeProvider({ children }) {
       setTheme(newTheme);
     }
   };
+
+  // Prevent rendering until mounted to avoid hydration mismatches
+  if (!mounted) {
+    return <div style={{ visibility: 'hidden' }}>{children}</div>;
+  }
 
   return (
     <ThemeContext.Provider value={{ 

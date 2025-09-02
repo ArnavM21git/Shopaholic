@@ -14,6 +14,8 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error('Error stack:', error.stack);
+    console.error('Component stack:', errorInfo.componentStack);
   }
 
   render() {
@@ -55,6 +57,13 @@ class ErrorBoundary extends React.Component {
                 fontSize: '12px'
               }}>
                 {this.state.error?.toString()}
+                {this.state.error?.stack && (
+                  <>
+                    <br /><br />
+                    <strong>Stack Trace:</strong><br />
+                    {this.state.error.stack}
+                  </>
+                )}
               </pre>
             </details>
           )}
